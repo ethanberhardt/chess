@@ -14,7 +14,7 @@ bool Pawn::isMoveShapeValid(int fromRow, int fromCol, int toRow, int toCol){
 
     if (deltaCol == 0){
         if (deltaRow == direction) return true; // single step 
-        if (deltaRow == direction * 2) return true; // double step 
+        if ((deltaRow == direction * 2) && !this->hasMoved) return true; // double step 
     }
 
     if (deltaRow == direction && abs(deltaCol) == 1) return true; // diagonal [step] capture
