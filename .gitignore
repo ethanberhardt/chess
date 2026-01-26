@@ -1,0 +1,10 @@
+# Ignore compiled object files
+*.o
+
+# Ignore executables
+chess
+chessTester
+
+# Ignore backup files, editor temp files
+*~
+*.swp
