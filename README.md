@@ -23,10 +23,10 @@ Being able to play chess on the console; each player provides the square and the
 
 ### Plans for 3 Versions [General Overview]
 
-- Version 1: Console Based Chess 'Engine'
+- Version 1: Console Based Chess 'Engine' -> Branch 1
     - v 1.1: Implement Board and Pieces [Kings, Queens, Bishops, Knights, Rooks, and Pawns]
     - v 1.2: Castling, En Passant, Promotions, Checks [includes pins], and Checkmate!
-    - v 1.3: Better Board Graphics, Players, Switching Board Views
+    - v 1.3: Better Board Graphics, Players, Switching Board Views, Forced Draws
 
-- Version 2: GUI Based Chess 'Engine' 
-- Version 3: Client-Server [Chess Engine Online]
+- Version 2: GUI Based Chess 'Engine' -> Branch 2
+- Version 3: Client-Server [Chess Engine Online] -> Branch 3

@@ -21,3 +21,7 @@ char Piece::getSymbol() const{
 void Piece::notifyMoved() {
     // nothing to do
 }
+
+bool Piece::getHasMoved(){
+    return true; 
+}

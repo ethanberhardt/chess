@@ -5,11 +5,11 @@ all: chessTester
 chess: main.o board.o piece.o king.o queen.o rook.o bishop.o knight.o pawn.o
 	g++ $(CXXFLAGS) -o chess main.o board.o piece.o king.o queen.o rook.o bishop.o knight.o pawn.o
 
-chessTester: testBoard.o board.o piece.o king.o queen.o rook.o bishop.o knight.o pawn.o
-	g++ $(CXXFLAGS) -o chessTester testBoard.o board.o piece.o king.o queen.o rook.o bishop.o knight.o pawn.o
+chessTester: test_driver.o board.o piece.o king.o queen.o rook.o bishop.o knight.o pawn.o
+	g++ $(CXXFLAGS) -o chessTester test_driver.o board.o piece.o king.o queen.o rook.o bishop.o knight.o pawn.o
 
-testBoard.o: testBoard.cc board.h piece.h king.h queen.h rook.h bishop.h knight.h pawn.h
-	g++ $(CXXFLAGS) -c testBoard.cc
+test_driver.o: test_driver.cc board.h piece.h king.h queen.h rook.h bishop.h knight.h pawn.h
+	g++ $(CXXFLAGS) -c test_driver.cc
 
 main.o: main.cc board.h piece.h king.h queen.h rook.h bishop.h knight.h pawn.h
 	g++ $(CXXFLAGS) -c main.cc

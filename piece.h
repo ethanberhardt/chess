@@ -14,7 +14,8 @@ class Piece {
         const string& getColor() const;
         char getSymbol() const;
 
-        virtual void notifyMoved() ;
+        virtual void notifyMoved();
+        virtual bool getHasMoved(); 
 
     private: 
         string color; 

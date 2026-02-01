@@ -5,11 +5,12 @@
 
 class Rook: public Piece{
     public: 
-        Rook(const string& color); 
+        Rook(const string& color, bool hasMoved = false); 
         bool isMoveShapeValid(int fromRow, int fromCol, int toRow, int toCol) override; 
-
+        bool getHasMoved() override; 
+        void notifyMoved() override; 
     private: 
-        //
+        bool hasMoved; 
 }; 
 
 

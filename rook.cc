@@ -2,7 +2,7 @@
 
 using namespace std; 
 
-Rook::Rook(const string& color): Piece(color, 'R') {}
+Rook::Rook(const string& color, bool hasMoved): Piece(color, 'R'), hasMoved(hasMoved){}
 
 bool Rook::isMoveShapeValid(int fromRow, int fromCol, int toRow, int toCol){
     int deltaRow = fromRow - toRow; // change in rows [moving from left to right is +]
@@ -15,4 +15,12 @@ bool Rook::isMoveShapeValid(int fromRow, int fromCol, int toRow, int toCol){
     } else {
         return false; 
     }
+}
+
+bool Rook::getHasMoved(){
+    return hasMoved; 
+}
+
+void Rook::notifyMoved(){
+    hasMoved = true; 
 }
