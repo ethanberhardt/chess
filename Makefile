@@ -1,6 +1,6 @@
-CXXFLAGS = -Wall -std=c++17
+CXXFLAGS = -Wall -std=c++20
 
-all: chessTester
+all: chess
 
 chess: main.o board.o piece.o king.o queen.o rook.o bishop.o knight.o pawn.o
 	g++ $(CXXFLAGS) -o chess main.o board.o piece.o king.o queen.o rook.o bishop.o knight.o pawn.o

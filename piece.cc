@@ -1,5 +1,5 @@
 #include "piece.h"
-#include <cctype>
+
 
 
 Piece::Piece(const string& color, char symbol): color(color){
@@ -25,3 +25,24 @@ void Piece::notifyMoved() {
 bool Piece::getHasMoved(){
     return true; 
 }
+
+string Piece::getUnicodeSymbol() const {
+    if (color == "white") {
+        if (tolower(symbol) == 'k')  return "♔";
+        if (tolower(symbol) == 'q')  return "♕";
+        if (tolower(symbol) == 'r')  return "♖";
+        if (tolower(symbol) == 'b')  return "♗";
+        if (tolower(symbol) == 'n')  return "♘";
+        if (tolower(symbol) == 'p')  return "♙";
+    } else {
+        if (tolower(symbol) == 'k')  return "♚";
+        if (tolower(symbol) == 'q')  return "♛";
+        if (tolower(symbol) == 'r')  return "♜";
+        if (tolower(symbol) == 'b')  return "♝";
+        if (tolower(symbol) == 'n')  return "♞";
+        if (tolower(symbol) == 'p')  return "♟";
+    }
+    
+    return " "; // empty square
+}
+

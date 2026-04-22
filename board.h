@@ -2,7 +2,9 @@
 #define BOARD_H
 
 #include "piece.h"
+#include "moveResult.h"
 #include <iostream>
+#include <stack>
 
 class Board {
     public: 
@@ -19,22 +21,25 @@ class Board {
         bool isCheckMate(const string& color);
         bool isStaleMate(const string& color);
 
-        int movePiece(int fromRow, int fromCol, int toRow, int toCol); 
+        MoveResult movePiece(int fromRow, int fromCol, int toRow, int toCol); 
     
     private: 
         Piece* board[8][8]; // 2D Array that keeps pointers to each piece
         Piece* lastDoubleStepPawn;  
         static int sign(int x);
 
+        // History Keeper
+        std::stack<MoveRecord> moveHistory; 
+
         // Helper Functions
-        bool validatePieceMove(Piece* currPiece, int fromRow, int fromCol, int toRow, int toCol);
-        bool validatePawnCapture(Piece* currPiece, Piece* destination, int fromRow, int fromCol, int toRow, int toCol);
+        MoveResult validatePieceMove(Piece* currPiece, int fromRow, int fromCol, int toRow, int toCol);
+        MoveResult validatePawnCapture(Piece* currPiece, Piece* destination, int fromRow, int fromCol, int toRow, int toCol);
         bool isSquareAttacked(int row, int col, const string& color); 
-        bool isPathClear(int fromRow, int fromCol, int toRow, int toCol);
+        MoveResult isPathClear(int fromRow, int fromCol, int toRow, int toCol);
 
         bool isCastlingAttempt(Piece* piece, int fromCol, int toCol);
-        bool isCastlingLegal(Piece* king, int fromRow, int fromCol, int toCol, int& rookFromCol, int& rookToCol);
-        int performCastling(Piece* currPiece, int fromRow, int fromCol, int toCol);
+        MoveResult isCastlingLegal(Piece* king, int fromRow, int fromCol, int toCol, int& rookFromCol, int& rookToCol);
+        MoveResult performCastling(Piece* currPiece, int fromRow, int fromCol, int toCol);
 
         void captureHandler(Piece* currPiece, Piece* destination, int fromRow, int toCol);
 
@@ -46,7 +51,7 @@ class Board {
                        bool isCastle, int rookFromCol, int rookToCol, Piece* rook);
         void undoMove(Piece* moving, Piece* destination, int fromRow, int fromCol, int toRow, int toCol, bool isEnPassant, Piece* epPawn, 
                       bool isCastle, int rookFromCol, int rookToCol, Piece* rook);
-        bool wouldLeaveKingInCheck(int fromRow, int fromCol, int toRow, int toCol, const string& color);
+        MoveResult wouldLeaveKingInCheck(int fromRow, int fromCol, int toRow, int toCol, const string& color);
 
         bool hasAnyLegalMove(const string& color);
 

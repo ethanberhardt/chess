@@ -13,6 +13,7 @@ class Piece {
 
         const string& getColor() const;
         char getSymbol() const;
+        string getUnicodeSymbol() const; 
 
         virtual void notifyMoved();
         virtual bool getHasMoved(); 
