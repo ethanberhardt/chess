@@ -12,10 +12,10 @@ bool King::isMoveShapeValid(int fromRow, int fromCol, int toRow, int toCol){
         return false; 
     } else if (abs(deltaRow) <= 1 && abs(deltaCol) <= 1){ // kings can move only move one square anywhere around them
         return true;
-    } else if (deltaRow == 0 && abs(deltaCol) == 2){
+    } else if (deltaRow == 0 && abs(deltaCol) == 2 && fromCol == 4){
         return true; 
     } else {
-        return false; 
+        return false;
     }
 }
 
@@ -27,4 +27,8 @@ void King::notifyMoved(){
     hasMoved = true; 
 }
 
+void King::setHasMoved(bool flag){
+    // cout << "King::setHasMoved()" << endl;
+    hasMoved = flag; 
+}
 

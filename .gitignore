@@ -1,10 +1,18 @@
-# Ignore compiled object files
+# Object files
 *.o
 
-# Ignore executables
+# Executables
 chess
 chessTester
+undoTester
+a.out
 
-# Ignore backup files, editor temp files
+# Editor temp files
 *~
 *.swp
+
+# VSCode
+.vscode/
+
+# macOS
+.DS_Store

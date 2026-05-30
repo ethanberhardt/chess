@@ -1,32 +1,67 @@
-# Chess v.1[.1,.2,.3]
+# Chess Engine (C++)
 
-## Scope [as of right now]
-A two-player chess game based in the console with legal moves
+A fully playable chess engine built from scratch in C++ using object-oriented design principles and modular game-state architecture.
 
-## Excluded [for now]:
-- No AI [only for 2 players]
-- No GUI
-- No timers
+This project implements legal chess gameplay within the console, including move validation, piece-specific movement logic, check/checkmate detection, and game-state management. The engine was designed with extensibility in mind, allowing future expansion into GUI and online multiplayer implementations.
 
-## What does 'done' look like?
-Being able to play chess on the console; each player provides the square and the piece that they want to move to [and from].
+## Features
 
-### Planning
-- Each piece will keep track of it's "own data".
-    - Pieces will not keep track of where they are.
-    - Essentially they will only know HOW they move and they will implement that; the board will take care of the rest. 
-- Every piece will basically know how to move.
-    - e.g. a rook will know it can move back and forth and side to side but not know which squares it can land on. 
-- The board will keep track of essentially where the pieces are. 
-    - This is done so that the board can "validate" if the piece's moves are feasible as each piece doesn't keep tabs on the others
-    - So items such as pins and castling violations, the board will keep track of, even though a piece might think it's legal to make those moves. 
+### Implemented
 
-### Plans for 3 Versions [General Overview]
+* Legal move generation
+* Piece-specific movement rules
+* Check and checkmate detection
+* Castling
+* En passant
+* Pawn promotion
+* Move history
+* Undo/redo support
+* Console-based gameplay
 
-- Version 1: Console Based Chess 'Engine' -> Branch 1
-    - v 1.1: Implement Board and Pieces [Kings, Queens, Bishops, Knights, Rooks, and Pawns]
-    - v 1.2: Castling, En Passant, Promotions, Checks [includes pins], and Checkmate!
-    - v 1.3: Better Board Graphics, Players, Switching Board Views, Forced Draws
+## Architecture
 
-- Version 2: GUI Based Chess 'Engine' -> Branch 2
-- Version 3: Client-Server [Chess Engine Online] -> Branch 3
+The engine separates game-state management from piece behaviour to maintain modularity and extensibility.
+
+### Design Overview
+
+* **Pieces** determine how they move based on movement rules
+* **Board logic** validates move legality and maintains overall game state
+* **Game management** handles turn flow, move execution, and rule enforcement
+
+This separation simplifies validation of more complex rules such as checks, pins, castling restrictions, and special moves.
+
+## Project Structure
+
+```text
+chess/
+├── src/        # implementation (.cc)
+├── include/    # headers (.h)
+├── build/      # compilation output
+```
+
+## How to Run
+
+Compile:
+
+```bash
+make
+```
+
+Run:
+
+```bash
+./chess
+```
+
+## Future Development
+
+Planned expansions include:
+
+* Graphical user interface (GUI)
+* AI opponent
+* Online multiplayer implementation
+* Additional gameplay and interface improvements
+
+## Development Notes
+
+Additional design notes and roadmap planning are available in the `/docs` directory.

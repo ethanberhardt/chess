@@ -3,6 +3,7 @@
 
 #include "piece.h"
 #include "moveResult.h"
+#include "moveRecord.h"
 #include <iostream>
 #include <stack>
 
@@ -22,6 +23,8 @@ class Board {
         bool isStaleMate(const string& color);
 
         MoveResult movePiece(int fromRow, int fromCol, int toRow, int toCol); 
+
+        bool undoLastMove();
     
     private: 
         Piece* board[8][8]; // 2D Array that keeps pointers to each piece
@@ -37,11 +40,11 @@ class Board {
         bool isSquareAttacked(int row, int col, const string& color); 
         MoveResult isPathClear(int fromRow, int fromCol, int toRow, int toCol);
 
-        bool isCastlingAttempt(Piece* piece, int fromCol, int toCol);
+        bool isCastlingAttempt(Piece* piece, int fromRow, int fromCol, int toCol);
         MoveResult isCastlingLegal(Piece* king, int fromRow, int fromCol, int toCol, int& rookFromCol, int& rookToCol);
-        MoveResult performCastling(Piece* currPiece, int fromRow, int fromCol, int toCol);
+        MoveResult performCastling(Piece* currPiece, int fromRow, int fromCol, int toCol, MoveRecord& record);
 
-        void captureHandler(Piece* currPiece, Piece* destination, int fromRow, int toCol);
+        Piece* captureHandler(Piece* currPiece, Piece* destination, int fromRow, int toCol);
 
         void updateBoard(int fromRow, int fromCol, int toRow, int toCol); 
 
@@ -55,7 +58,7 @@ class Board {
 
         bool hasAnyLegalMove(const string& color);
 
-        void pawnPromotion(const string& color, int row, int col); 
+        Piece* pawnPromotion(const string& color, int row, int col); 
 };
 
 

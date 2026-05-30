@@ -22,6 +22,15 @@ bool Pawn::isMoveShapeValid(int fromRow, int fromCol, int toRow, int toCol){
     return false; 
 }
 
+bool Pawn::getHasMoved(){
+    return hasMoved; 
+}
+
 void Pawn::notifyMoved() {
-    this->hasMoved = true; 
+    hasMoved = true; 
+}
+
+void Pawn::setHasMoved(bool flag) {
+    // cout << "Pawn::setHasMoved()" << endl;
+    hasMoved = flag; 
 }

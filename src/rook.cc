@@ -24,3 +24,8 @@ bool Rook::getHasMoved(){
 void Rook::notifyMoved(){
     hasMoved = true; 
 }
+
+void Rook::setHasMoved(bool flag){
+    // cout << "Rook::setHasMoved()" << endl;
+    hasMoved = flag; 
+}

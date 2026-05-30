@@ -2,6 +2,7 @@
 #define PIECE_H
  
 #include <string>
+#include <iostream>
 using namespace std; 
 
 class Piece {
@@ -17,6 +18,7 @@ class Piece {
 
         virtual void notifyMoved();
         virtual bool getHasMoved(); 
+        virtual void setHasMoved(bool); 
 
     private: 
         string color; 

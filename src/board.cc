@@ -88,7 +88,7 @@ void Board::printBoard(){
         cout << row+1 << " "; // Just to keep tabs on indices 
         for (int col = 0; col < 8; col++){
             if (board[row][col] == nullptr){
-                cout << ". "; 
+                cout << "· "; 
             } else {
                 cout << (board[row][col])->getUnicodeSymbol() << " "; 
             }
@@ -97,15 +97,15 @@ void Board::printBoard(){
     } cout << "  a b c d e f g h" << endl; // Just to keep tabs on indices
 }
 
-// returns 0: successful | returns 1: invalid move | returns 2: path blocked OR 'to' box is occupied by same colour piece
+
 MoveResult Board::movePiece(int fromRow, int fromCol, int toRow, int toCol){
 
     if (toRow < 0 || toRow > 7 || toCol < 0 || toCol > 7) return MoveResult::INVALID_ROW_COL; // invalid square -> invalid move
     
     Piece* currPiece = board[fromRow][fromCol]; 
     Piece* destination = board[toRow][toCol];
-    MoveResult result; 
-
+    MoveResult result; MoveRecord record; 
+    
     // Validates that the piece exists on the square AND checks that the piece's move is valid for what it is
     result = validatePieceMove(currPiece, fromRow, fromCol, toRow, toCol);
     if (result != MoveResult::SUCCESS) return result; 
@@ -126,13 +126,32 @@ MoveResult Board::movePiece(int fromRow, int fromCol, int toRow, int toCol){
     if (result != MoveResult::SUCCESS) return result; 
 
     // Castling Handler -> needs to be left after wouldLeaveKingInCheck as this moves the rook that is going to be castled
-    result = performCastling(currPiece, fromRow, fromCol, toCol); 
+    result = performCastling(currPiece, fromRow, fromCol, toCol, record); 
     if (result != MoveResult::SUCCESS) return result; 
 
     // Handling the capture of a piece
+    // Creating MoveRecord for the Undo/Redo Functionality 
+
+    Piece* ep = nullptr; 
+    if (isEnPassantMove(currPiece, destination, fromRow, fromCol, toCol, ep)){
+        record.type = MoveType::EN_PASSANT; 
+        record.capturedRow = fromRow; 
+        record.capturedCol = toCol; 
+    }
+
     Piece* captured = captureHandler(currPiece, destination, fromRow, toCol); 
 
-    // Creating MoveRecord for 
+    // Only true for NORMAL moves right now
+    record.fromRow = fromRow; record.fromCol = fromCol; 
+    record.toRow = toRow; record.toCol = toCol; 
+
+    record.movingPiece = currPiece; 
+
+    record.capturedPiece = captured; 
+
+    record.previousLastDoubleStepPawn = lastDoubleStepPawn; 
+
+    record.movingPieceHadMoved = currPiece->getHasMoved(); 
     
     // Check last pawn that moved 2 squares. Keep this as stored state. If not, assign a nullptr.
     if (tolower(currPiece->getSymbol()) == 'p' && abs(fromRow - toRow) == 2){
@@ -141,14 +160,80 @@ MoveResult Board::movePiece(int fromRow, int fromCol, int toRow, int toCol){
         this->lastDoubleStepPawn = nullptr; 
     }
 
+    // Push to the history stack
+    // cout << (int)record.type << endl;    
+    // cout << record.capturedRow << endl; 
+    // cout << record.capturedCol << endl;   
+    moveHistory.push(record); 
+    // cout << sizeof(moveHistory) << endl; 
+
     // Updates the board -> moves the piece!
     updateBoard(fromRow, fromCol, toRow, toCol);
 
+    // cout << "Will I see this or not?" << endl;
+
     // Checks for pawn promotions, if applicable
-    pawnPromotion(currPiece->getColor(), toRow, toCol); 
+    record.promotedPiece = pawnPromotion(currPiece->getColor(), toRow, toCol); 
+    if (record.promotedPiece != nullptr){
+        record.type = MoveType::PROMOTION; 
+    }
     
     return MoveResult::SUCCESS; // move successful
 
+}
+
+bool Board::undoLastMove(){
+    if (moveHistory.empty()) return false; 
+
+    // Handles only Normal Moves
+    MoveRecord record = moveHistory.top(); 
+
+    // cout << "From: (" << record.fromRow << "," << record.fromCol << ")" << endl; 
+    // cout << "To:   (" << record.toRow << "," << record.toCol << ")" << endl; 
+
+    // cout << "Moving Piece Symbol: " << record.movingPiece->getSymbol() << endl; 
+    // cout << "Is Captured Piece a NullPtr: " << (record.capturedPiece == nullptr) << endl; 
+    // cout << "Is DoubleStepPawn a NullPtr: " << (record.previousLastDoubleStepPawn == nullptr) << endl; 
+
+    moveHistory.pop(); 
+
+    // cout << "Removing record from history" << endl; 
+
+    board[record.fromRow][record.fromCol] = record.movingPiece; 
+    // cout << "Putting back piece to where it was" << endl; 
+
+    board[record.toRow][record.toCol] = record.capturedPiece; 
+    // cout << "Restoring captured piece to it's square [if it exists]" << endl; 
+
+    this->lastDoubleStepPawn = record.previousLastDoubleStepPawn; 
+    // cout << "Restoring state for double pawn" << endl; 
+
+    switch(record.type) {
+
+        case (MoveType::CASTLE): 
+            board[record.fromRow][record.rookFromCol] = record.rook; 
+            board[record.fromRow][record.rookToCol] = nullptr; 
+            record.rook->setHasMoved(record.rookHadMoved); 
+            break; 
+
+        case (MoveType::EN_PASSANT): 
+            board[record.toRow][record.toCol] = nullptr; // IMPORTANT AS THE PAWN CAPTURED WOULDN'T BE ON IT'S REGULAR SQUARE
+            board[record.capturedRow][record.capturedCol] = record.capturedPiece;
+            break; 
+        
+        case (MoveType::PROMOTION): 
+            delete record.promotedPiece; 
+            board[record.toRow][record.toCol] = record.capturedPiece; 
+            board[record.fromRow][record.fromCol] = record.movingPiece;
+    }
+    // cout << "Moving piece ptr: " << record.movingPiece << endl;
+    // cout << "Board[from] ptr:  " << board[record.fromRow][record.fromCol] << endl;
+    // cout << "About to restore hasMoved..." << endl;
+    record.movingPiece->setHasMoved(record.movingPieceHadMoved);
+    // cout << "Finished restoring hasMoved..." << endl;
+    // cout << "Restoring hasMoved State" << endl; 
+
+    return true; 
 }
 
 // Defaults to a queen promotion; when introducing user input, will update this to the user's choice
@@ -156,9 +241,8 @@ Piece* Board::pawnPromotion(const string& color, int row, int col){
     if (board[row][col] == nullptr || tolower(board[row][col]->getSymbol()) != 'p') return nullptr; 
     
     if ((color == "white" && row == 7) || (color == "black" && row == 0)){
-        Piece* oldPiece = board[row][col]; 
         board[row][col] = new Queen(color); 
-        return oldPiece; 
+        return board[row][col]; 
     }
 
     return nullptr; 
@@ -239,7 +323,7 @@ MoveResult Board::wouldLeaveKingInCheck(int fromRow, int fromCol, int toRow, int
     bool isEnPassant = isEnPassantMove(moving, destination, fromRow, fromCol, toCol, epPawn);
  
     int rookFromCol = 0; int rookToCol = 0; 
-    bool isCastle = (isCastlingAttempt(moving, fromCol, toCol)) && (isCastlingLegal(moving, fromRow, fromCol, toCol, rookFromCol, rookToCol) == MoveResult::SUCCESS); 
+    bool isCastle = (isCastlingAttempt(moving, fromRow, fromCol, toCol)) && (isCastlingLegal(moving, fromRow, fromCol, toCol, rookFromCol, rookToCol) == MoveResult::SUCCESS); 
     Piece* rook = isCastle ? board[fromRow][rookFromCol]: nullptr; 
 
     applyMove(moving, destination, fromRow, fromCol, toRow, toCol, isEnPassant, epPawn, isCastle, rookFromCol, rookToCol, rook);
@@ -253,14 +337,16 @@ MoveResult Board::wouldLeaveKingInCheck(int fromRow, int fromCol, int toRow, int
     return MoveResult::SUCCESS;
 }
 
-bool Board::isCastlingAttempt(Piece* piece, int fromCol, int toCol){
-    return (tolower(piece->getSymbol()) == 'k' && abs(toCol - fromCol) == 2); 
+bool Board::isCastlingAttempt(Piece* piece, int fromRow, int fromCol, int toCol){
+    if (tolower(piece->getSymbol()) != 'k' || abs(toCol - fromCol) != 2) return false; 
+    if (piece->getColor() == "white") return (fromRow == 0 && fromCol == 4); 
+    else return (fromRow == 7 && fromCol == 4); 
 }
 
 MoveResult Board::isCastlingLegal(Piece* king, int fromRow, int fromCol, int toCol, int& rookFromCol, int& rookToCol){
     Piece* rook = (fromCol < toCol) ? board[fromRow][7] : board[fromRow][0]; // Gets the rook that the king is trying to castle with
     
-    if (!rook || tolower(rook->getSymbol()) != 'r') return MoveResult::ERR_CASTLING_ROOK_MOVED; // checks that there is a piece there and that it is a roook
+    if (!rook || tolower(rook->getSymbol()) != 'r') return MoveResult::ERR_CASTLING_ROOK_MOVED; // checks that there is a piece there and that it is a rook
     if (king->getHasMoved()) return MoveResult::ERR_CASTLING_KING_MOVED; // checks if the king or rook have moved
     if (rook->getHasMoved()) return MoveResult::ERR_CASTLING_ROOK_MOVED; // checks if the king or rook have moved
     if (isKingInCheck(king->getColor())) {
@@ -282,13 +368,19 @@ MoveResult Board::isCastlingLegal(Piece* king, int fromRow, int fromCol, int toC
     return MoveResult::SUCCESS; 
 }
 
-MoveResult Board::performCastling(Piece* currPiece, int fromRow, int fromCol, int toCol){
+MoveResult Board::performCastling(Piece* currPiece, int fromRow, int fromCol, int toCol, MoveRecord& record){
     int rookFromCol, rookToCol; 
 
-    if (!isCastlingAttempt(currPiece, fromCol, toCol)) return MoveResult::SUCCESS; // successful as the move itself is NOT a castling attempt
+    if (!isCastlingAttempt(currPiece, fromRow, fromCol, toCol)) return MoveResult::SUCCESS; // successful as the move itself is NOT a castling attempt
 
     MoveResult result = isCastlingLegal(currPiece, fromRow, fromCol, toCol, rookFromCol, rookToCol); 
     if (result != MoveResult::SUCCESS) return result;  
+
+    record.type = MoveType::CASTLE; 
+    record.rook = board[fromRow][rookFromCol]; 
+    record.rookFromCol = rookFromCol; 
+    record.rookToCol = rookToCol; 
+    record.rookHadMoved = record.rook->getHasMoved(); 
 
     board[fromRow][rookToCol] = board[fromRow][rookFromCol]; 
     board[fromRow][rookFromCol] = nullptr; 
@@ -311,6 +403,9 @@ bool Board::isKingInCheck(const string& color){
 }
 
 void Board::updateBoard(int fromRow, int fromCol, int toRow, int toCol){
+    // cout << board[fromRow][fromCol] << endl; 
+    // cout << board[toRow][toCol] << endl; 
+
     board[toRow][toCol] = board[fromRow][fromCol]; 
     board[fromRow][fromCol] = nullptr; 
     board[toRow][toCol]->notifyMoved(); 
@@ -350,6 +445,7 @@ MoveResult Board::validatePieceMove(Piece* currPiece, int fromRow, int fromCol, 
     } 
 
     if (!currPiece->isMoveShapeValid(fromRow, fromCol, toRow, toCol)) {
+        if (currPiece->getSymbol() == 'K' && ((fromRow - toRow != 0) || (fromCol - toCol != 0))) return MoveResult::ERR_CASTLING_KING_MOVED; 
         return MoveResult::INVALID_PIECE_MOVE; // invalid move for particular piece -> uses polymorphism here!
     } return MoveResult::SUCCESS; 
 }

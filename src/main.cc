@@ -1,6 +1,7 @@
 #include "board.h"
 #include <iostream>
 #include <string>
+#include <sstream>
 
 using namespace std; 
 
@@ -8,70 +9,87 @@ bool convertSquare(const string& sq, int& row, int& col);
 bool validInput(const string& from, const string& to, int& fromRow, int& fromCol, int& toRow, int& toCol); 
 bool trulyYourPiece(Board& b, int fromRow, int fromCol, int currentPlayer);
 string errorTranslator(MoveResult result); 
+void clearScreen(); 
 
 int main(){
+    cout << "\033[?1049h";
     Board game; 
     game.boardInit(); 
 
-    cout << "======================================================================================" << endl;
-    game.printBoard(); 
+    string originalString = ""; 
+    string from = ""; string to = ""; 
 
-    string from = ""; string to = "";
-    int currentPlayer = 1; 
+    int currentPlayer = 1; // NOTE: UI handles which player's turn it is
+    string statusMessage = ""; 
 
     while (true){
-
+        clearScreen(); 
         cout << "======================================================================================" << endl;
+        game.printBoard(); 
+        cout << "======================================================================================" << endl;
+        if (!statusMessage.empty()) cout << "INVALID MOVE! " << statusMessage << "\n" << endl; 
+        statusMessage = ""; 
+
         string user = (currentPlayer) ? "White to Move" : "Black to Move"; cout << user << endl;
-        
+        cout << "Commands: 'undo' OR 0 0 to quit" << endl; 
         cout << "Enter Move (e.g. e2 e4): "; 
-        cin >> from >> to; cout << endl; 
+
+        getline(cin, originalString); 
+
+        if (originalString == "undo"){
+            if (game.undoLastMove()) currentPlayer = !currentPlayer; 
+            else statusMessage = "No moves to undo"; 
+            continue; 
+        }
+
+        else {
+            istringstream iss(originalString); 
+            iss >> from >> to; 
+        }
 
         int fromRow, fromCol, toRow, toCol; 
 
         if (from == "0" && to == "0") break; 
 
         if (!validInput(from, to, fromRow, fromCol, toRow, toCol)) {
-            game.printBoard(); 
-            cout << "\nInvalid Input!" << endl; 
+            statusMessage = "Invalid Input!"; 
             continue; 
         }
 
         if (!trulyYourPiece(game, fromRow, fromCol, currentPlayer)){
-            game.printBoard(); 
-            cout << "\nThat's not your piece!" << endl; 
+            statusMessage = "That's not your piece!";
             continue; 
         }
 
         MoveResult result = game.movePiece(fromRow, fromCol, toRow, toCol); 
         if (result != MoveResult::SUCCESS) {
-            game.printBoard(); 
-            cout << "\nINVALID MOVE! " << errorTranslator(result) << endl; 
+            statusMessage =  errorTranslator(result); 
             continue; 
         }
 
-        game.printBoard(); 
-
         if (game.isCheckMate("white")) {
-            cout << "Game Over. Black wins!"; 
+            statusMessage = "GAME OVER. Black wins!"; 
             break; 
         }
 
         if (game.isCheckMate("black")) {
-            cout << "Game Over. White wins!"; 
+            statusMessage = "GAME OVER. White wins!"; 
             break; 
         }
 
         if (game.isStaleMate("white") || game.isStaleMate("black")) {
-            cout << "Game Over. It's a draw!"; 
+            statusMessage = "GAME OVER. It's a draw!"; 
             break; 
         }
 
         currentPlayer = !currentPlayer; 
+
+        
     }
 
-    cout << "======================================================================================" << endl;
+    
 
+    cout << "\033[?1049l";
     return 0; 
 }
 
@@ -129,6 +147,9 @@ bool trulyYourPiece(Board& b, int fromRow, int fromCol, int currentPlayer){
     Piece* p = b.getPiece(fromRow, fromCol);
     string color = (currentPlayer) ? "white" : "black";
 
-    if (p && p->getColor() == color) return true; 
-    else return false; 
+    return (p && p->getColor() == color); 
+}
+
+void clearScreen(){
+    cout << "\033[3J\033[2J\033[H";
 }

@@ -26,6 +26,10 @@ bool Piece::getHasMoved(){
     return true; 
 }
 
+void Piece::setHasMoved(bool flag){
+    // cout << "Piece::setHasMoved()" << endl;
+} 
+
 string Piece::getUnicodeSymbol() const {
     if (color == "white") {
         if (tolower(symbol) == 'k')  return "♔";
