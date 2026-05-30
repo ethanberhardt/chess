@@ -2,7 +2,7 @@ CXX = g++
 CXXFLAGS = -Wall -std=c++20 -Iinclude
 OBJS = build/board.o build/piece.o build/king.o build/queen.o build/rook.o build/bishop.o build/knight.o build/pawn.o 
 
-all: chess
+all: undoTester
 
 chess: build/main.o $(OBJS)
 	$(CXX) -o chess build/main.o $(OBJS)

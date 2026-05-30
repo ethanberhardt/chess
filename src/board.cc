@@ -141,7 +141,6 @@ MoveResult Board::movePiece(int fromRow, int fromCol, int toRow, int toCol){
 
     Piece* captured = captureHandler(currPiece, destination, fromRow, toCol); 
 
-    // Only true for NORMAL moves right now
     record.fromRow = fromRow; record.fromCol = fromCol; 
     record.toRow = toRow; record.toCol = toCol; 
 
@@ -160,17 +159,10 @@ MoveResult Board::movePiece(int fromRow, int fromCol, int toRow, int toCol){
         this->lastDoubleStepPawn = nullptr; 
     }
 
-    // Push to the history stack
-    // cout << (int)record.type << endl;    
-    // cout << record.capturedRow << endl; 
-    // cout << record.capturedCol << endl;   
-    moveHistory.push(record); 
-    // cout << sizeof(moveHistory) << endl; 
+    moveHistory.push(record);  
 
     // Updates the board -> moves the piece!
     updateBoard(fromRow, fromCol, toRow, toCol);
-
-    // cout << "Will I see this or not?" << endl;
 
     // Checks for pawn promotions, if applicable
     record.promotedPiece = pawnPromotion(currPiece->getColor(), toRow, toCol); 
@@ -186,29 +178,20 @@ bool Board::undoLastMove(){
     if (moveHistory.empty()) return false; 
 
     // Handles only Normal Moves
-    MoveRecord record = moveHistory.top(); 
-
-    // cout << "From: (" << record.fromRow << "," << record.fromCol << ")" << endl; 
-    // cout << "To:   (" << record.toRow << "," << record.toCol << ")" << endl; 
-
-    // cout << "Moving Piece Symbol: " << record.movingPiece->getSymbol() << endl; 
-    // cout << "Is Captured Piece a NullPtr: " << (record.capturedPiece == nullptr) << endl; 
-    // cout << "Is DoubleStepPawn a NullPtr: " << (record.previousLastDoubleStepPawn == nullptr) << endl; 
-
+    MoveRecord record = moveHistory.top();
     moveHistory.pop(); 
 
-    // cout << "Removing record from history" << endl; 
+
 
     board[record.fromRow][record.fromCol] = record.movingPiece; 
-    // cout << "Putting back piece to where it was" << endl; 
-
     board[record.toRow][record.toCol] = record.capturedPiece; 
-    // cout << "Restoring captured piece to it's square [if it exists]" << endl; 
-
     this->lastDoubleStepPawn = record.previousLastDoubleStepPawn; 
-    // cout << "Restoring state for double pawn" << endl; 
+
 
     switch(record.type) {
+
+        case (MoveType::NORMAL): 
+            break; 
 
         case (MoveType::CASTLE): 
             board[record.fromRow][record.rookFromCol] = record.rook; 
@@ -225,13 +208,12 @@ bool Board::undoLastMove(){
             delete record.promotedPiece; 
             board[record.toRow][record.toCol] = record.capturedPiece; 
             board[record.fromRow][record.fromCol] = record.movingPiece;
-    }
-    // cout << "Moving piece ptr: " << record.movingPiece << endl;
-    // cout << "Board[from] ptr:  " << board[record.fromRow][record.fromCol] << endl;
-    // cout << "About to restore hasMoved..." << endl;
-    record.movingPiece->setHasMoved(record.movingPieceHadMoved);
-    // cout << "Finished restoring hasMoved..." << endl;
-    // cout << "Restoring hasMoved State" << endl; 
+
+        default: 
+            cout << "ERROR!!! Weird Move Type in Undo Move Functionality" << endl; 
+        }
+
+    record.movingPiece->setHasMoved(record.movingPieceHadMoved); 
 
     return true; 
 }
