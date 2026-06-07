@@ -4,61 +4,91 @@
 #include "piece.h"
 #include "moveResult.h"
 #include "moveRecord.h"
+#include <string>
 #include <iostream>
 #include <stack>
+#include <vector>
 
 class Board {
-    public: 
+
+    public:
+        // Construction and Cleanup
         Board();
-        ~Board(); 
+        ~Board();
 
-        void printBoard(); 
+        // Board Display and Initialization
+        void printBoard();
         void boardInit();
+        void clearBoard();
 
-        void clearBoard(); // for testing purposes
-        void placePiece(int row, int col, Piece* p); // for testing purposes
-        Piece* getPiece(int row, int col); // for testing purposes
+        // Testing Utilities
+        void placePiece(int row, int col, Piece* p);
+        Piece* getPiece(int row, int col);
+        void setWhiteToMove(bool whiteToMove);
 
+        // Primary Game Interface
+        MoveResult movePiece(int fromRow, int fromCol, int toRow, int toCol);
+        bool undoLastMove();
+
+        // Game State Queries
         bool isCheckMate(const string& color);
         bool isStaleMate(const string& color);
+        bool isWhiteToMove() const;
+        bool isFiftyMoveDraw() const;
+        bool isThreeFoldRepetition() const;
 
-        MoveResult movePiece(int fromRow, int fromCol, int toRow, int toCol); 
-
-        bool undoLastMove();
-    
-    private: 
-        Piece* board[8][8]; // 2D Array that keeps pointers to each piece
-        Piece* lastDoubleStepPawn;  
+    private:
+        // Core Board Representation
+        Piece* board[8][8];
         static int sign(int x);
 
-        // History Keeper
-        std::stack<MoveRecord> moveHistory; 
+        // Game State
+        Piece* lastDoubleStepPawn;
+        int lastDoubleStepRow;
+        int lastDoubleStepCol;
 
-        // Helper Functions
+        bool whiteToMove;
+        int halfMoveClock;
+
+        stack<MoveRecord> moveHistory;
+        vector<string> positionHistory;
+
+        // Move Validation
+        MoveResult validateYourPiece(Piece* currPiece);
         MoveResult validatePieceMove(Piece* currPiece, int fromRow, int fromCol, int toRow, int toCol);
         MoveResult validatePawnCapture(Piece* currPiece, Piece* destination, int fromRow, int fromCol, int toRow, int toCol);
-        bool isSquareAttacked(int row, int col, const string& color); 
         MoveResult isPathClear(int fromRow, int fromCol, int toRow, int toCol);
+        MoveResult wouldLeaveKingInCheck(int fromRow, int fromCol, int toRow, int toCol, const string& color);
 
+        // Castling
         bool isCastlingAttempt(Piece* piece, int fromRow, int fromCol, int toCol);
         MoveResult isCastlingLegal(Piece* king, int fromRow, int fromCol, int toCol, int& rookFromCol, int& rookToCol);
         MoveResult performCastling(Piece* currPiece, int fromRow, int fromCol, int toCol, MoveRecord& record);
 
+        // En Passant
+        bool isEnPassantMove(Piece* moving, Piece* destination, int fromRow, int fromCol, int toCol, Piece*& ePawn);
+
+        // Promotion
+        Piece* pawnPromotion(const string& color, int row, int col);
+
+        // Captures
         Piece* captureHandler(Piece* currPiece, Piece* destination, int fromRow, int toCol);
 
-        void updateBoard(int fromRow, int fromCol, int toRow, int toCol); 
+        // Move Recording and Undo Support
+        void buildMoveRecord(int fromRow, int fromCol, int toRow, int toCol, int previousLastDoubleStepRow, int previouslastDoubleStepCol, Piece* currPiece, Piece* captured, MoveRecord& record);
 
+        // Board Mutation Helpers
+        void updateBoard(int fromRow, int fromCol, int toRow, int toCol);
+        void applyMove(Piece* moving, Piece* destination, int fromRow, int fromCol, int toRow, int toCol, bool isEnPassant, Piece* epPawn, bool isCastle, int rookFromCol, int rookToCol, Piece* rook);
+        void undoMove(Piece* moving, Piece* destination, int fromRow, int fromCol, int toRow, int toCol, bool isEnPassant, Piece* epPawn, bool isCastle, int rookFromCol, int rookToCol, Piece* rook);
+
+        // Check, Checkmate, and Stalemate Logic
         bool isKingInCheck(const string& color);
-        bool isEnPassantMove(Piece* moving, Piece* destination, int fromRow, int fromCol, int toCol, Piece*& ePawn);
-        void applyMove(Piece* moving, Piece* destination, int fromRow, int fromCol, int toRow, int toCol, bool isEnPassant, Piece* epPawn, 
-                       bool isCastle, int rookFromCol, int rookToCol, Piece* rook);
-        void undoMove(Piece* moving, Piece* destination, int fromRow, int fromCol, int toRow, int toCol, bool isEnPassant, Piece* epPawn, 
-                      bool isCastle, int rookFromCol, int rookToCol, Piece* rook);
-        MoveResult wouldLeaveKingInCheck(int fromRow, int fromCol, int toRow, int toCol, const string& color);
-
         bool hasAnyLegalMove(const string& color);
+        bool isSquareAttacked(int row, int col, const string& color);
 
-        Piece* pawnPromotion(const string& color, int row, int col); 
+        // Position Tracking and Draw Detection
+        string generateFingerPrint() const;
 };
 
 

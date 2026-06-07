@@ -19,6 +19,8 @@ struct MoveRecord {
     int capturedCol = -1; // Data needed for en passant
 
     Piece* previousLastDoubleStepPawn = nullptr; // NULL if no pawn moved 2 squares
+    int previousLastDoubleStepRow = -1; 
+    int previousLastDoubleStepCol = -1;
 
     MoveType type = MoveType::NORMAL; // NORMAL, EN_PASSANT, CASTLE, PROMOTION
 
@@ -30,7 +32,7 @@ struct MoveRecord {
     int rookToCol = -1; 
     
     Piece* promotedPiece = nullptr; // promoted piece 
-
+    int previousHalfMoveClock = 0; // fifty-move rule state
 }; 
 
 

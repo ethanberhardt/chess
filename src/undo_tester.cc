@@ -96,6 +96,7 @@ void enPassantUndoTest(Board& b, int& counter) {
     b.clearBoard();
     b.placePiece(4, 3, new Pawn("white"));
     b.placePiece(6, 4, new Pawn("black"));
+    b.setWhiteToMove(false); 
     b.movePiece(6, 4, 4, 4); // Black double step
     runUndoTest(b, 4, 3, 5, 4, "En Passant Undo", counter);
 }

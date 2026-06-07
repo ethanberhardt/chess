@@ -7,7 +7,6 @@ using namespace std;
 
 bool convertSquare(const string& sq, int& row, int& col);
 bool validInput(const string& from, const string& to, int& fromRow, int& fromCol, int& toRow, int& toCol); 
-bool trulyYourPiece(Board& b, int fromRow, int fromCol, int currentPlayer);
 string errorTranslator(MoveResult result); 
 void clearScreen(); 
 
@@ -19,7 +18,6 @@ int main(){
     string originalString = ""; 
     string from = ""; string to = ""; 
 
-    int currentPlayer = 1; // NOTE: UI handles which player's turn it is
     string statusMessage = ""; 
 
     while (true){
@@ -30,15 +28,14 @@ int main(){
         if (!statusMessage.empty()) cout << "INVALID MOVE! " << statusMessage << "\n" << endl; 
         statusMessage = ""; 
 
-        string user = (currentPlayer) ? "White to Move" : "Black to Move"; cout << user << endl;
+        string user = (game.isWhiteToMove()) ? "White to Move" : "Black to Move"; cout << user << endl;
         cout << "Commands: 'undo' OR 0 0 to quit" << endl; 
         cout << "Enter Move (e.g. e2 e4): "; 
 
         getline(cin, originalString); 
 
         if (originalString == "undo"){
-            if (game.undoLastMove()) currentPlayer = !currentPlayer; 
-            else statusMessage = "No moves to undo"; 
+            if (!game.undoLastMove()) statusMessage = "No moves to undo"; 
             continue; 
         }
 
@@ -56,11 +53,6 @@ int main(){
             continue; 
         }
 
-        if (!trulyYourPiece(game, fromRow, fromCol, currentPlayer)){
-            statusMessage = "That's not your piece!";
-            continue; 
-        }
-
         MoveResult result = game.movePiece(fromRow, fromCol, toRow, toCol); 
         if (result != MoveResult::SUCCESS) {
             statusMessage =  errorTranslator(result); 
@@ -72,24 +64,32 @@ int main(){
             break; 
         }
 
-        if (game.isCheckMate("black")) {
+        else if (game.isCheckMate("black")) {
             statusMessage = "GAME OVER. White wins!"; 
             break; 
         }
 
-        if (game.isStaleMate("white") || game.isStaleMate("black")) {
+        else if (game.isStaleMate("white") || game.isStaleMate("black")) {
             statusMessage = "GAME OVER. It's a draw!"; 
             break; 
         }
 
-        currentPlayer = !currentPlayer; 
-
+        else if (game.isFiftyMoveDraw()){
+            statusMessage = "GAME OVER. Draw by 50-move rule!"; 
+            break; 
+        }
         
+        else if (game.isThreeFoldRepetition()){
+            statusMessage = "GAME OVER. Draw by 3-fold repetition!"; 
+            break; 
+        } 
+
+        else continue; 
     }
-
     
+    // cout << "\033[?1049l";
 
-    cout << "\033[?1049l";
+    cout << statusMessage << endl; 
     return 0; 
 }
 
@@ -115,6 +115,8 @@ string errorTranslator(MoveResult result){
             return "Castling Illegal as the King has moved.";
         case MoveResult::ERR_CASTLING_ROOK_MOVED:
             return "Castling Illegal as the Rook has moved.";
+        case MoveResult::WRONG_TURN: 
+            return "The piece you are trying to move is not yours."; 
         default: 
             return "SHOULD NOT BE PRINTED"; 
     }
@@ -141,13 +143,6 @@ bool validInput(const string& from, const string& to, int& fromRow, int& fromCol
     if (!convertSquare(from, fromRow, fromCol) || !convertSquare(to, toRow, toCol)) return false; 
 
     return true; 
-}
-
-bool trulyYourPiece(Board& b, int fromRow, int fromCol, int currentPlayer){
-    Piece* p = b.getPiece(fromRow, fromCol);
-    string color = (currentPlayer) ? "white" : "black";
-
-    return (p && p->getColor() == color); 
 }
 
 void clearScreen(){
